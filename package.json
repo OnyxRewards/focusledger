@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "Local ADHD-friendly task tracker with MCP tools for coding agents.",
   "license": "MIT",
-  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",

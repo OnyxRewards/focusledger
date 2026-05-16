@@ -3,6 +3,23 @@ $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $repo
 
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+  throw "Node.js 22 or newer is required. Install it from https://nodejs.org/ and rerun this script."
+}
+
+if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+  throw "npm was not found. Install Node.js 22 or newer from https://nodejs.org/ and rerun this script."
+}
+
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+  Write-Host "Git was not found. Setup can continue, but cloning/updating the repo will require Git."
+}
+
+$nodeMajor = [int]((node --version).TrimStart("v").Split(".")[0])
+if ($nodeMajor -lt 22) {
+  throw "Node.js 22 or newer is required. Current version: $(node --version)"
+}
+
 Write-Host "Installing dependencies..."
 npm install
 
@@ -12,8 +29,7 @@ npm run build
 Write-Host "Creating Desktop shortcut..."
 powershell -ExecutionPolicy Bypass -File (Join-Path $repo "scripts\create-desktop-shortcut.ps1")
 
-$mcpCommand = "cmd.exe"
-$mcpArgs = "/c cd /d $repo && npm run mcp --silent"
+$mcpArgs = "cd /d `"$repo`" && npm run mcp --silent"
 
 function Ensure-CodexMcp {
   if (-not (Get-Command codex -ErrorAction SilentlyContinue)) {
@@ -28,7 +44,7 @@ function Ensure-CodexMcp {
   }
 
   Write-Host "Registering Codex MCP..."
-  codex mcp add focus-ledger -- cmd.exe /c "cd /d $repo && npm run mcp --silent"
+  codex mcp add focus-ledger -- cmd.exe /c $mcpArgs
 }
 
 function Ensure-ClaudeMcp {
@@ -44,7 +60,7 @@ function Ensure-ClaudeMcp {
   }
 
   Write-Host "Registering Claude MCP..."
-  claude mcp add focus-ledger -- cmd.exe /c "cd /d $repo && npm run mcp --silent"
+  claude mcp add focus-ledger -- cmd.exe /c $mcpArgs
 }
 
 Ensure-CodexMcp
